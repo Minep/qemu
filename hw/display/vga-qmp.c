@@ -48,12 +48,33 @@ static VgaGfxInfo* vga_qmp_query_gfx(VGACommonState* s) {
         break;
     }
 
+    switch (s->shift_control)
+    {
+    case 0:
+        gfx->colordepth = 16;
+        break;
+
+    case 1:
+        gfx->colordepth = 4;
+        break;
+
+    case 2:
+        gfx->colordepth = 256;
+        break;
+    
+    default:
+        gfx->colordepth = -1;
+        break;
+    }
+
     return gfx;
 }
 
 static VgaRegisterInfo* vga_qmp_dump_regs(VGACommonState* s) {
     VgaRegisterInfo* reginfo = g_malloc(sizeof(VgaRegisterInfo));
 
+    reginfo->misc = s->msr;
+    reginfo->arflfp = (uint8_t)s->ar_flip_flop;
     memcpy(&reginfo->sr0, s->sr, sizeof(0x5 * sizeof(uint8_t)));
     memcpy(&reginfo->ar0, s->ar, sizeof(0x15 * sizeof(uint8_t)));
     memcpy(&reginfo->gr0, s->gr, sizeof(0x9 * sizeof(uint8_t)));
@@ -64,6 +85,15 @@ static VgaRegisterInfo* vga_qmp_dump_regs(VGACommonState* s) {
 
 static VgaSeqInfo* vga_qmp_query_seq(VGACommonState* s) {
     VgaSeqInfo* seqinfo = g_malloc(sizeof(VgaSeqInfo));
+
+    seqinfo->chain4 = s->has_chain4_alias;
+    seqinfo->vram = s->vram.addr;
+    seqinfo->vramsz = s->vram_size;
+    seqinfo->vramc4 = s->chain4_alias.addr;
+    seqinfo->vramc4sz = s->chain4_alias.size;
+    seqinfo->start = s->start_addr;
+    seqinfo->lineoff = s->line_offset;
+    seqinfo->updatedplane = s->plane_updated;
 
     return seqinfo;
 }
@@ -82,10 +112,15 @@ static VgaInfo* vga_qmp_query(struct VgaInstance* vi) {
 
 VgaInfoList* qmp_query_vga(Error **errp) {
     VgaInfoList *head = NULL, **tail = &head;
-    struct VgaInstance *vga_instance;
+    VgaInstance *vga_instance;
+
+    int i = 0;
 
     QLIST_FOREACH(vga_instance, &vga_instances, next) {
-        QAPI_LIST_APPEND(tail, vga_qmp_query(vga_instance));
+        VgaInfo* info = vga_qmp_query(vga_instance);
+        info->index = ++i;
+
+        QAPI_LIST_APPEND(tail, info);
     }
 
     return head;
@@ -96,9 +131,82 @@ static void hmp_printregs(Monitor* mon, uint8_t* regs, size_t len) {
     {
         monitor_printf(mon, "0x%02x  ", regs[i]);
         if (!((i + 1) % 8)) {
-            monitor_printf(mon, "\n   ");
+            monitor_printf(mon, "\n     ");
         }
     }
+}
+
+static void vga_hmp_dumpregs(Monitor* mon, VgaRegisterInfo* r) {
+    monitor_printf(mon, " Core Regsiters:\n");
+
+    monitor_printf(mon, "   MISC:\n     0x%x\n", r->misc);
+
+    uint8_t *regs = (uint8_t*)&r->sr0;
+    monitor_printf(mon, "   SR:\n     ");
+    hmp_printregs(mon, regs, 0x5);
+    
+    regs = (uint8_t*)&r->gr0;
+    monitor_printf(mon, "\n   GR:\n     ");
+    hmp_printregs(mon, regs, 0x9);
+
+    regs = (uint8_t*)&r->ar0;
+    monitor_printf(mon, "\n   AR: (ARX Mode: %s)\n     ", r->arflfp ? "data" : "index");
+    hmp_printregs(mon, regs, 0x15);
+
+    regs = (uint8_t*)&r->cr0;
+    monitor_printf(mon, "\n   CR:\n     ");
+    hmp_printregs(mon, regs, 0x19);
+
+    monitor_printf(mon, "\n\n");
+}
+
+static void vga_hmp_printmask(Monitor* mon, uint32_t mask) {
+    int b = 0;
+    while(mask) {
+        if ((mask & 1)) {
+            monitor_printf(mon, " %d", b);
+        }
+        mask = mask >> 1;
+        b++;
+    }
+}
+
+static void vga_hmp_loginfo(Monitor* mon, VgaInfo* instance) {
+
+    monitor_printf(mon, "VGA #%ld (Mode: %s, Color: %d)\n", 
+                        instance->index, instance->graphics->mode, instance->graphics->colordepth);
+
+    VgaCrtInfo* crt = instance->crt;
+    monitor_printf(mon, " CRT:\n");
+    monitor_printf(mon, "   Res: %dx%d\n", crt->width, crt->height);
+    monitor_printf(mon, "   CCLK: %d q.ticks\n", crt->freq);
+    monitor_printf(mon, "   Dots: %ld\n", crt->ticksperchar);
+    monitor_printf(mon, "   Total Chars: %ld\n", crt->totalchars);
+    monitor_printf(mon, "   H_scan: (s:%d, e:%d, t:%d)\n", 
+                        crt->hstart, crt->hend, crt->htotal);
+    monitor_printf(mon, "   V_scan: (s:%d, e:%d)\n", 
+                        crt->vstart, crt->vend);
+
+    VgaSeqInfo* seq = instance->sequencer;
+    monitor_printf(mon, " Sequencer:\n");
+    monitor_printf(mon, "   chain-4: %s\n", seq->chain4 ? "enabled": "disabled");
+    monitor_printf(mon, "   line: 0x%x+0x%x\n", seq->start, seq->lineoff);
+    monitor_printf(mon, "   VRAM:\n");
+    monitor_printf(mon, "     (sys) 0x%lx [0x%x]\n", seq->vram, seq->vramsz);
+    if (seq->chain4) {
+        monitor_printf(mon, "     (ch4) 0x%lx [0x%x]\n", seq->vramc4, seq->vramc4sz);
+    }
+
+    monitor_printf(mon, "   Plane:\n"
+                        "     Enabled: ");
+    vga_hmp_printmask(mon, instance->registerdump->sr2 & 0xf);
+    monitor_printf(mon, "\n"
+                        "     Updated: ");
+    vga_hmp_printmask(mon, instance->sequencer->updatedplane & 0xf);
+    monitor_printf(mon, "\n");
+
+    VgaRegisterInfo* r = instance->registerdump;
+    vga_hmp_dumpregs(mon, r);
 }
 
 void hmp_info_vga(Monitor *mon, const QDict *qdict)
@@ -106,45 +214,17 @@ void hmp_info_vga(Monitor *mon, const QDict *qdict)
     Error* err;
 
     VgaInfoList *info_list, *info;
+    VgaInstance *vi = vga_instances.lh_first;
 
     info_list = qmp_query_vga(&err);
 
     int k = 0;
 
-    for (info = info_list; info; info = info->next) {
+    for (info = info_list; info && vi; info = info->next, vi = vi->next.le_next) {
         VgaInfo* instance = info->value;
+        // VGACommonState* state = vi->vga_state;
 
-        monitor_printf(mon, "VGA #%i (Mode: %s)\n", k, instance->graphics->mode);
-
-        VgaCrtInfo* crt = instance->crt;
-        monitor_printf(mon, " CRT:\n");
-        monitor_printf(mon, "  Res: %dx%d\n", crt->width, crt->height);
-        monitor_printf(mon, "  Freq: %d Hz\n", crt->freq);
-        monitor_printf(mon, "  Dots: %ld\n", crt->ticksperchar);
-        monitor_printf(mon, "  Total Chars: %ld\n", crt->totalchars);
-        monitor_printf(mon, "  H_scan: (s:%d, e:%d, t:%d)\n", crt->hstart, crt->hend, crt->htotal);
-        monitor_printf(mon, "  V_scan: (s:%d, e:%d, t:%d)\n", crt->vstart, crt->vend, crt->vend - crt->vstart);
-
-        VgaRegisterInfo* r = instance->registerdump;
-        monitor_printf(mon, " Regsiters:\n");
-        
-        uint8_t *regs = (uint8_t*)&r->sr0;
-        monitor_printf(mon, "  SR:\n   ");
-        hmp_printregs(mon, regs, 0x5);
-        
-        regs = (uint8_t*)&r->gr0;
-        monitor_printf(mon, "\n  GR:\n   ");
-        hmp_printregs(mon, regs, 0x9);
-
-        regs = (uint8_t*)&r->ar0;
-        monitor_printf(mon, "\n  AR:\n   ");
-        hmp_printregs(mon, regs, 0x15);
-
-        regs = (uint8_t*)&r->cr0;
-        monitor_printf(mon, "\n  CR:\n   ");
-        hmp_printregs(mon, regs, 0x19);
-
-        monitor_printf(mon, "\n\n");
+        vga_hmp_loginfo(mon, instance);
 
         k++;
     }

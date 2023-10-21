@@ -15,7 +15,16 @@
 # Since: 0.14
 ##
 {   'struct': 'VgaSeqInfo', 
-    'data': { 'chain4': 'bool', 'extendedmem': 'bool', 'oddeven': 'bool' }  
+    'data': { 
+        'chain4': 'bool', 
+        'vram': 'uint64', 
+        'vramsz': 'uint32',
+        'vramc4': 'uint64', 
+        'vramc4sz': 'uint32',
+        'start': 'uint32',
+        'lineoff': 'uint32',
+        'updatedplane': 'uint32'
+    }  
 }
 
 ##
@@ -50,7 +59,8 @@
 {
     'struct': 'VgaGfxInfo',
     'data': {
-        'mode': 'str'
+        'mode': 'str',
+        'colordepth': 'uint32'
     }
 }
 
@@ -63,6 +73,7 @@
 {
     'struct': 'VgaRegisterInfo',
     'data': {
+        'misc': 'uint8',
         'sr0': 'uint8',
         'sr1': 'uint8',
         'sr2': 'uint8',
@@ -98,6 +109,7 @@
         'ar12': 'uint8',
         'ar13': 'uint8',
         'ar14': 'uint8',
+        'arflfp': 'uint8',
         'cr0': 'uint8',
         'cr1': 'uint8',
         'cr2': 'uint8',
@@ -138,7 +150,8 @@
         'sequencer' : 'VgaSeqInfo',
         'crt' : 'VgaCrtInfo',
         'graphics' : 'VgaGfxInfo',
-        'registerdump' : 'VgaRegisterInfo'
+        'registerdump' : 'VgaRegisterInfo',
+        'index': 'int'
     }
 }
 

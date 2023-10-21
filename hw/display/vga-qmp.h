@@ -4,10 +4,10 @@
 #include "qapi/qapi-builtin-types.h"
 #include "qemu/queue.h"
 
-struct VgaInstance {
+typedef struct VgaInstance {
     void* vga_state;// VGACommonState
     QLIST_ENTRY(VgaInstance) next;
-};
+} VgaInstance;
 
 typedef QLIST_HEAD(,VgaInstance) VgaInstanceList;
 
