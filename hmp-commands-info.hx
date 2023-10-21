@@ -15,6 +15,22 @@ SRST
 ``info`` *subcommand*
   Show various information about the system state.
 
+
+ERST
+
+
+    {
+        .name       = "vga",
+        .args_type  = "",
+        .params     = "",
+        .help       = "show vga state",
+        .cmd        = hmp_info_vga,
+    },
+SRST
+  Export current VGA state
+
+    info vga
+
 ERST
 
     {

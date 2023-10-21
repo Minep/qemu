@@ -1,0 +1,151 @@
+# -*- Mode: Python -*-
+# vim: filetype=python
+#
+
+##
+# = VGA
+##
+
+##
+# @VgaSeqInfo:
+#
+# Information about VGA Sequencer
+#
+#
+# Since: 0.14
+##
+{   'struct': 'VgaSeqInfo', 
+    'data': { 'chain4': 'bool', 'extendedmem': 'bool', 'oddeven': 'bool' }  
+}
+
+##
+# @VgaCrtInfo:
+#
+# Information about VGA CRT
+#
+##
+{   'struct': 'VgaCrtInfo',
+    'data': {
+        'ticksperchar': 'int64',
+        'totalchars': 'int64',
+        'htotal': 'uint32',
+        'hstart': 'uint32',
+        'hend': 'uint32',
+        'vstart': 'uint32',
+        'vend': 'uint32',
+        'freq': 'uint32',
+        'width': 'uint32',
+        'height': 'uint32',
+        'hwcursorx': 'uint32',
+        'hwcursory': 'uint32'
+    }
+}
+
+##
+# @VgaGfxInfo:
+#
+# Information about VGA Graphic controller
+#
+##
+{
+    'struct': 'VgaGfxInfo',
+    'data': {
+        'mode': 'str'
+    }
+}
+
+##
+# @VgaRegisterInfo:
+#
+# VGA Register Dump
+#
+##
+{
+    'struct': 'VgaRegisterInfo',
+    'data': {
+        'sr0': 'uint8',
+        'sr1': 'uint8',
+        'sr2': 'uint8',
+        'sr3': 'uint8',
+        'sr4': 'uint8',
+        'gr0': 'uint8',
+        'gr1': 'uint8',
+        'gr2': 'uint8',
+        'gr3': 'uint8',
+        'gr4': 'uint8',
+        'gr5': 'uint8',
+        'gr6': 'uint8',
+        'gr7': 'uint8',
+        'gr8': 'uint8',
+        'ar0': 'uint8',
+        'ar1': 'uint8',
+        'ar2': 'uint8',
+        'ar3': 'uint8',
+        'ar4': 'uint8',
+        'ar5': 'uint8',
+        'ar6': 'uint8',
+        'ar7': 'uint8',
+        'ar8': 'uint8',
+        'ar9': 'uint8',
+        'ara': 'uint8',
+        'arb': 'uint8',
+        'arc': 'uint8',
+        'ard': 'uint8',
+        'are': 'uint8',
+        'arf': 'uint8',
+        'ar10': 'uint8',
+        'ar11': 'uint8',
+        'ar12': 'uint8',
+        'ar13': 'uint8',
+        'ar14': 'uint8',
+        'cr0': 'uint8',
+        'cr1': 'uint8',
+        'cr2': 'uint8',
+        'cr3': 'uint8',
+        'cr4': 'uint8',
+        'cr5': 'uint8',
+        'cr6': 'uint8',
+        'cr7': 'uint8',
+        'cr8': 'uint8',
+        'cr9': 'uint8',
+        'cra': 'uint8',
+        'crb': 'uint8',
+        'crc': 'uint8',
+        'crd': 'uint8',
+        'cre': 'uint8',
+        'crf': 'uint8',
+        'cr10': 'uint8',
+        'cr11': 'uint8',
+        'cr12': 'uint8',
+        'cr13': 'uint8',
+        'cr14': 'uint8',
+        'cr15': 'uint8',
+        'cr16': 'uint8',
+        'cr17': 'uint8',
+        'cr18': 'uint8'
+    }
+}
+
+##
+# @VgaInfo:
+#
+# VGA Overview
+#
+##
+{
+    'struct': 'VgaInfo',
+    'data': {
+        'sequencer' : 'VgaSeqInfo',
+        'crt' : 'VgaCrtInfo',
+        'graphics' : 'VgaGfxInfo',
+        'registerdump' : 'VgaRegisterInfo'
+    }
+}
+
+##
+# @query-vga:
+#
+# Query vga
+#
+##
+{ 'command': 'query-vga', 'returns': ['VgaInfo'] }
