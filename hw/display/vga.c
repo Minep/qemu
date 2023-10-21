@@ -38,6 +38,7 @@
 #include "hw/xen/xen.h"
 #include "migration/vmstate.h"
 #include "trace.h"
+#include "vga-qmp.h"
 
 //#define DEBUG_VGA_MEM
 //#define DEBUG_VGA_REG
@@ -2201,6 +2202,8 @@ static inline uint32_t uint_clamp(uint32_t val, uint32_t vmin, uint32_t vmax)
     return val;
 }
 
+VgaInstanceList vga_instances;
+
 bool vga_common_init(VGACommonState *s, Object *obj, Error **errp)
 {
     int i, j, v, b;
@@ -2278,6 +2281,10 @@ bool vga_common_init(VGACommonState *s, Object *obj, Error **errp)
     s->default_endian_fb = target_words_bigendian();
 
     vga_dirty_log_start(s);
+
+    struct VgaInstance *vinstance = g_new(struct VgaInstance, 1);
+    vinstance->vga_state = s;
+    QLIST_INSERT_HEAD(&vga_instances, vinstance, next);
 
     return true;
 }
