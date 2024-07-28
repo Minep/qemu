@@ -335,7 +335,7 @@ static void serial_ioport_write(void *opaque, hwaddr addr, uint64_t val,
     SerialState *s = opaque;
 
     assert(size == 1 && addr < 8);
-    trace_serial_write(addr, val);
+    trace_serial_write(s->chr.chr->label, addr, val);
     switch(addr) {
     default:
     case 0:

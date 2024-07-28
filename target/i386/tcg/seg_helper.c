@@ -593,15 +593,15 @@ int exception_has_error_code(int intno)
 #define POPL(ssp, sp, sp_mask, val) POPL_RA(ssp, sp, sp_mask, val, 0)
 
 static inline void
-log_interrupt(int intno, CPUX86State* env)
+log_interrupt(int intno, int is_hw, CPUX86State* env)
 {
-    trace_x86_recv_interrupts_all(intno, env->eip);
-
     if (intno < 32) {
         trace_x86_recv_fault(intno, env->eip);
     } else {
         trace_x86_recv_interrupts(intno, env->eip);
     }
+
+    trace_x86_recv_interrupts_all(intno, env->eip);
 }
 
 /* protected mode interrupt */
@@ -616,8 +616,6 @@ static void do_interrupt_protected(CPUX86State *env, int intno, int is_int,
     uint32_t e1, e2, offset, ss = 0, esp, ss_e1 = 0, ss_e2 = 0;
     uint32_t old_eip, sp_mask;
     int vm86 = env->eflags & VM_MASK;
-
-    log_interrupt(intno, env);
 
     has_error_code = 0;
     if (!is_int && !is_hw) {
@@ -885,8 +883,6 @@ static void do_interrupt64(CPUX86State *env, int intno, int is_int,
     uint32_t e1, e2, e3, ss;
     target_ulong old_eip, esp, offset;
 
-    log_interrupt(intno, env);
-
     has_error_code = 0;
     if (!is_int && !is_hw) {
         has_error_code = exception_has_error_code(intno);
@@ -1100,6 +1096,7 @@ void do_interrupt_all(X86CPU *cpu, int intno, int is_int,
                       int error_code, target_ulong next_eip, int is_hw)
 {
     CPUX86State *env = &cpu->env;
+    log_interrupt(intno, is_hw, env);
 
     if (qemu_loglevel_mask(CPU_LOG_INT)) {
         if ((env->cr[0] & CR0_PE_MASK)) {
