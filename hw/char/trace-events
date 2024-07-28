@@ -6,7 +6,7 @@ parallel_ioport_write(const char *desc, uint16_t addr, uint8_t value) "write [%s
 
 # serial.c
 serial_read(uint16_t addr, uint8_t value) "read addr 0x%02x val 0x%02x"
-serial_write(uint16_t addr, uint8_t value) "write addr 0x%02x val 0x%02x"
+serial_write(const char* path, uint16_t addr, uint8_t value) "%s: write addr 0x%02x val 0x%02x"
 serial_update_parameters(uint64_t baudrate, char parity, int data_bits, int stop_bits) "baudrate=%"PRIu64" parity='%c' data=%d stop=%d"
 
 # virtio-serial-bus.c
