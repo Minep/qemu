@@ -33,7 +33,7 @@
 #include "qemu/error-report.h"
 
 /* Show multiboot debug output */
-//#define DEBUG_MULTIBOOT
+#define DEBUG_MULTIBOOT
 
 #ifdef DEBUG_MULTIBOOT
 #define mb_debug(a...) error_report(a)
@@ -196,10 +196,10 @@ int load_multiboot(X86MachineState *x86ms,
         int kernel_size;
         fclose(f);
 
-        if (((struct elf64_hdr*)header)->e_machine == EM_X86_64) {
-            error_report("Cannot load x86-64 image, give a 32bit one.");
-            exit(1);
-        }
+        // if (((struct elf64_hdr*)header)->e_machine == EM_X86_64) {
+        //     error_report("Cannot load x86-64 image, give a 32bit one.");
+        //     exit(1);
+        // }
 
         kernel_size = load_elf(kernel_filename, NULL, NULL, NULL, &elf_entry,
                                &elf_low, &elf_high, NULL, 0, I386_ELF_MACHINE,
@@ -272,6 +272,7 @@ int load_multiboot(X86MachineState *x86ms,
         mb_debug("multiboot: load_addr = %#x", mh_load_addr);
         mb_debug("multiboot: load_end_addr = %#x", mh_load_end_addr);
         mb_debug("multiboot: bss_end_addr = %#x", mh_bss_end_addr);
+        mb_debug("multiboot: text_off = %#x", mb_kernel_text_offset);
         mb_debug("loading multiboot kernel (%#x bytes) at %#x",
                  mb_load_size, mh_load_addr);
 
