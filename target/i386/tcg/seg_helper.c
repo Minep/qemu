@@ -597,15 +597,15 @@ int exception_has_error_code(int intno)
 #define POPL(ssp, sp, sp_mask, val) POPL_RA(ssp, sp, sp_mask, val, 0)
 
 static inline void
-log_interrupt(int intno, int is_hw, CPUX86State* env)
+log_interrupt(int intno, int is_hw, CPUX86State* env, int ecode)
 {
     if (intno < 32) {
-        trace_x86_recv_fault(intno, env->eip);
+        trace_x86_recv_fault(intno, env->eip, ecode);
     } else {
         trace_x86_recv_interrupts(intno, env->eip);
     }
 
-    trace_x86_recv_interrupts_all(intno, env->eip);
+    trace_x86_recv_interrupts_all(intno, env->eip, ecode);
 }
 
 /* protected mode interrupt */
@@ -1097,7 +1097,7 @@ void do_interrupt_all(X86CPU *cpu, int intno, int is_int,
                       int error_code, target_ulong next_eip, int is_hw)
 {
     CPUX86State *env = &cpu->env;
-    log_interrupt(intno, is_hw, env);
+    log_interrupt(intno, is_hw, env, error_code);
 
     if (qemu_loglevel_mask(CPU_LOG_INT)) {
         if ((env->cr[0] & CR0_PE_MASK)) {

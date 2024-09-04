@@ -13,5 +13,5 @@ kvm_sev_launch_secret(uint64_t hpa, uint64_t hva, uint64_t secret, int len) "hpa
 kvm_sev_attestation_report(const char *mnonce, const char *data) "mnonce %s data %s"
 
 x86_recv_interrupts(int intno, uint64_t pc) "interrupt #%d, pc=0x%" PRIx64
-x86_recv_interrupts_all(int intno, uint64_t pc) "interrupt #%d, pc=0x%" PRIx64
-x86_recv_fault(int intno, uint64_t pc) "fault on #%d, pc=0x%" PRIx64
+x86_recv_interrupts_all(int intno, uint64_t pc, int e) "interrupt #%d, pc=0x%" PRIx64 ", e=0x%" PRIx32
+x86_recv_fault(int intno, uint64_t pc, int e) "fault on #%d, pc=0x%" PRIx64 ", e=0x%" PRIx32
