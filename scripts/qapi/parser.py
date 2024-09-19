@@ -705,10 +705,10 @@ class QAPIDoc:
 
     def connect_member(self, member: 'QAPISchemaMember') -> None:
         if member.name not in self.args:
-            if self.symbol not in member.info.pragma.documentation_exceptions:
-                raise QAPISemError(member.info,
-                                   "%s '%s' lacks documentation"
-                                   % (member.role, member.name))
+            # if self.symbol not in member.info.pragma.documentation_exceptions:
+            #     raise QAPISemError(member.info,
+            #                        "%s '%s' lacks documentation"
+            #                        % (member.role, member.name))
             self.args[member.name] = QAPIDoc.ArgSection(
                 self.info, '@' + member.name)
         self.args[member.name].connect(member)

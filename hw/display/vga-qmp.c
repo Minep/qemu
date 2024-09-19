@@ -91,8 +91,8 @@ static VgaSeqInfo* vga_qmp_query_seq(VGACommonState* s) {
     seqinfo->vramsz = s->vram_size;
     seqinfo->vramc4 = s->chain4_alias.addr;
     seqinfo->vramc4sz = s->chain4_alias.size;
-    seqinfo->start = s->start_addr;
-    seqinfo->lineoff = s->line_offset;
+    seqinfo->start = s->vbe_start_addr;
+    seqinfo->lineoff = s->vbe_line_offset;
     seqinfo->updatedplane = s->plane_updated;
 
     return seqinfo;
